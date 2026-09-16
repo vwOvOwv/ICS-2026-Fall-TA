@@ -1,4 +1,4 @@
-# 2026-Fall-ICS-TA
+# ICS-2026-Fall-TA
 Slides for students in Section 2, actively updating 🔥.
 
 ## Lecture Slides
