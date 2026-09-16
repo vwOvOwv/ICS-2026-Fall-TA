@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>浮点数运算</title>
+<style>
+:root{--ink:#14283e;--muted:#68798d;--line:#dce4ed;--violet:#515ec2;--vbg:#eeeffc;--teal:#157f79;--tbg:#e6f3f0;--rust:#b85e4d;--rbg:#f9ebe6;--paper:#fbfcfe}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:#eaf0f5;color:var(--ink);font-family:"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif}button,input,select{font:inherit;color:inherit}button,select{cursor:pointer}button{height:38px;padding:0 14px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:17px;white-space:nowrap;transition:background .15s,border-color .15s}button:hover{background:#f3f4fc;border-color:var(--violet)}button.active{color:var(--violet);border-color:var(--violet);background:var(--vbg)}button.primary{background:var(--violet);color:#fff;border-color:var(--violet)}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid #929be1;outline-offset:3px}sup{font-size:.65em;line-height:0}code,.mono,.number{font-family:"DejaVu Sans Mono","SFMono-Regular",Consolas,monospace}code{font-size:.93em}#stage{width:1440px;height:810px;position:absolute;transform-origin:top left;overflow:hidden;background:var(--paper)}h1{position:absolute;left:62px;top:57px;margin:0;font-size:43px;font-weight:750;letter-spacing:-1px;line-height:1.35}.subtitle{position:absolute;left:64px;top:119px;margin:0;font-size:24px;color:var(--muted)}.nav{position:absolute;left:56px;right:56px;top:178px;height:40px;display:flex;align-items:center;justify-content:space-between}.tabs{display:flex;gap:10px}.tabs button{font-size:20px;padding:0 20px;height:40px}.navtools{display:flex;align-items:center;gap:14px}.hint{font-size:16px;color:var(--muted)}.scene{position:absolute;left:56px;top:234px;width:1328px;height:394px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 25px;overflow:hidden}.scenehead{height:49px;display:flex;align-items:center;justify-content:space-between;gap:20px}.scenehead h2{font-size:24px;margin:0;white-space:nowrap;font-weight:700}.inputline{display:flex;justify-content:flex-end;align-items:center;gap:20px;max-width:865px;font-size:18px;line-height:1.35;min-width:0}.inputline code{white-space:normal;overflow-wrap:anywhere;max-width:270px}.inputline small{font:15px "Noto Sans CJK SC",sans-serif;color:var(--muted);white-space:nowrap}.colheads,.lane{display:grid;grid-template-columns:198px repeat(3,minmax(0,1fr));column-gap:28px}.colheads{margin-top:9px;height:30px;text-align:center;align-items:start;color:var(--muted);font-size:16px}.colheads div:first-child{text-align:left}.lane{align-items:center;margin:7px 0 13px;height:96px}.laneexpr{font:26px "DejaVu Sans Mono",Consolas,monospace;letter-spacing:-1px;white-space:nowrap}.laneexpr small{display:block;margin-top:8px;font:16px "Noto Sans CJK SC","PingFang SC",sans-serif;color:var(--muted);letter-spacing:0}.cell{position:relative;min-width:0;height:96px;border:1px solid var(--line);border-radius:11px;background:#f8fafc;padding:9px 12px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.cell:not(.first):before{content:'→';position:absolute;left:-25px;top:30px;font-size:25px;color:#9ba7b6}.cell.round{background:var(--vbg);border-color:#dfe1f6}.cell.final{background:var(--tbg);border-color:#cfe4df}.cell.changed{background:var(--rbg);border-color:#eed8d0}.number{font-size:29px;line-height:1.22;max-width:100%;overflow-wrap:anywhere;letter-spacing:-.5px}.number.medium{font-size:23px;letter-spacing:-.6px}.number.long{font-size:18px;line-height:1.2;letter-spacing:-.6px}.power{white-space:nowrap}.cell .detail{margin-top:7px;color:var(--muted);font-size:16px;line-height:1.25;min-height:20px}.cell.round .number{color:var(--violet)}.cell.final .number{color:var(--teal)}.cell.changed .number,.cell.changed .detail{color:var(--rust)}.cell.wait{background:#fbfcfd;border-style:dashed;border-color:#e1e7ee}.cell.wait .number{color:#c2cbd6}.cell.wait .detail{color:#99a6b5}.cell[data-detail]{cursor:pointer}.cell[data-detail]:hover{box-shadow:0 0 0 2px #a5afe14d}.fresh{animation:glow .6s ease-out}.fresh .number{animation:arrive .45s ease-out}.conclusion{position:absolute;bottom:17px;left:25px;right:25px;min-height:42px;padding:8px 14px;border-radius:9px;background:#f1f4f8;font-size:20px;display:flex;align-items:center;gap:16px}.conclusion.revealed{background:var(--vbg);color:var(--violet)}.conclusion strong{font:25px "DejaVu Sans Mono",Consolas,monospace;white-space:nowrap}.conclusion .mini{font-size:19px}.lawrow{position:absolute;left:56px;right:56px;top:646px;height:87px;display:grid;grid-template-columns:1fr 1fr 1.03fr 1.4fr;gap:13px}.law{height:87px;border-radius:12px;text-align:left;padding:12px 17px;white-space:normal}.law .label{display:block;font-size:16px;color:var(--muted);margin-bottom:6px}.law .statement{display:block;font-size:19px;font-weight:500;letter-spacing:-.4px}.law .yes{color:var(--teal)}.law .no{color:var(--rust)}.law code{font-size:18px}.footer{position:absolute;left:64px;right:64px;top:753px;height:38px;display:flex;align-items:center;justify-content:space-between}.status{display:flex;align-items:center;gap:11px;font-size:16px;color:var(--muted);max-width:800px}.dots{display:flex;gap:5px}.dots i{width:18px;height:5px;border-radius:4px;background:#dfe5ed}.dots i.done{background:var(--violet)}.controls{display:flex;gap:8px}.controls .primary{min-width:125px}.transport{position:absolute;z-index:4;background:var(--violet);color:#fff;font:23px "DejaVu Sans Mono",monospace;padding:8px 12px;border-radius:9px;pointer-events:none;white-space:nowrap;max-width:355px;overflow:hidden;box-shadow:0 5px 18px #202f6620}.special-layout{display:grid;grid-template-columns:750px 1fr;gap:29px;margin-top:15px}.specchoices{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.specchoices button{height:40px;font:19px "DejaVu Sans Mono",monospace}.special-result{display:flex;align-items:center;justify-content:center;gap:22px;height:103px}.special-result .expr{font:29px "DejaVu Sans Mono",monospace}.special-result .answer{font:37px "DejaVu Sans Mono",monospace;color:var(--rust);background:var(--rbg);padding:8px 18px;min-width:120px;text-align:center;border-radius:10px}.special-result .q{color:#b6c0cd;background:#f4f6f9}.specnote{font-size:18px;text-align:center;color:var(--muted);min-height:28px}.compare{border-left:1px solid var(--line);padding-left:27px}.compare-title{font-size:19px;color:var(--muted);margin:0 0 15px}.comparands{display:flex;justify-content:space-between;align-items:center;gap:8px}.comparands select{width:147px;height:40px;background:#fff;border:1px solid var(--line);border-radius:7px;padding:0 10px;font:20px "DejaVu Sans Mono",monospace}.comparands span{color:var(--muted)}.oprow{display:flex;gap:7px;margin:15px 0}.oprow button{width:59px;height:36px;padding:0;font:20px "DejaVu Sans Mono",monospace}.comparison-result{padding:15px 0;border-radius:9px;background:var(--vbg);color:var(--violet);font:23px "DejaVu Sans Mono",monospace;text-align:center;white-space:nowrap}.overlay{position:absolute;inset:0;z-index:10;display:none;align-items:center;justify-content:center;background:#15273e68;backdrop-filter:blur(5px)}.overlay.open{display:flex}.dialog{width:1040px;max-height:704px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 100px #10243835;display:flex;flex-direction:column;overflow:hidden}.dialoghead{display:flex;align-items:center;justify-content:space-between;padding:21px 27px 17px;border-bottom:1px solid var(--line)}.dialoghead h2{font-size:25px;margin:0}.dialogbody{padding:19px 28px 25px;overflow:auto;max-height:615px;font-size:20px;line-height:1.7}.dialogbody p{margin:0 0 15px}.dialogbody p:last-child{margin-bottom:0}.dialogbody .note{font-size:17px;color:var(--muted)}.dialogbody h3{font-size:20px;color:var(--violet);margin:18px 0 5px}.dialogbody code{white-space:normal;overflow-wrap:anywhere}.dialogbody table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:18px}.dialogbody td,.dialogbody th{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}.dialogbody th:first-child{width:95px}.dialogbody th:last-child{width:150px}.exactdump{background:#f3f5f9;padding:12px 15px;border-radius:9px;font:18px/1.6 "DejaVu Sans Mono",monospace;overflow-wrap:anywhere;white-space:normal}.editgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:17px 0}.editgrid label{display:flex;flex-direction:column;gap:8px}.editgrid input{width:100%;height:45px;border:1px solid #cdd6e3;border-radius:8px;padding:7px 10px;font:19px "DejaVu Sans Mono",monospace}.editerror{min-height:30px;color:var(--rust);font-size:17px}.edit-actions{display:flex;gap:10px;margin-bottom:17px}.sr-only{position:absolute;left:-9999px}
+@keyframes arrive{from{opacity:0;transform:translateX(-15px)}to{opacity:1;transform:translateX(0)}}@keyframes glow{0%{box-shadow:0 0 0 4px #a9b1e345}100%{box-shadow:none}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Monotonicity uses the same single-slide canvas; no extra page or runtime dependency. */
+.navtools select{width:242px;height:38px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:17px}
+.navtools:has(#mono-preset){gap:8px}
+.law[data-info="monotone"].active{border-color:var(--violet);background:var(--vbg)}
+.scene.mono-scene .scenehead{height:53px;gap:16px}
+.mono-fixed{font-size:18px;display:flex;gap:11px;align-items:center;color:var(--muted)}
+.mono-fixed code{font-size:18px;color:var(--ink);white-space:nowrap}
+.mono-layout{display:grid;grid-template-columns:minmax(0,1fr) 231px;gap:23px;margin-top:5px}
+.mono-table{min-width:0}
+.mono-table .colheads,.mono-table .lane{grid-template-columns:236px minmax(0,1.38fr) minmax(0,.96fr);gap:27px}
+.mono-table .colheads{margin-top:0;height:31px}
+.mono-table .lane{height:97px;margin:6px 0 11px}
+.mono-table .cell{height:97px}
+.mono-table .cell:before{top:34px}
+.mono-table .number.long{font-size:20px;line-height:1.2;overflow-wrap:anywhere}
+.mono-input{font-size:25px;letter-spacing:0}
+.mono-input small{font-size:15px;line-height:1.5;margin-top:8px;white-space:normal}
+.mono-input small .mono{overflow-wrap:anywhere;line-height:1.35}
+.mono-input .input-label{color:var(--muted)}
+.mono-input .input-value{color:var(--ink)}
+.order-card{align-self:start;margin-top:30px;height:211px;border:1px solid var(--line);border-radius:13px;background:#f8fafc;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px 13px}
+.order-card .order-label{font-size:15px;color:var(--muted);line-height:1.4}
+.order-card .order-input{font:27px "DejaVu Sans Mono",monospace;margin-top:6px;color:var(--teal)}
+.order-card .order-arrow{font-size:22px;line-height:1.1;color:#9ba7b6;margin:6px 0}
+.order-card .order-symbol{font:40px/1.06 "DejaVu Sans Mono",monospace;color:#acb7c5;margin:5px 0}
+.order-card .order-sub{font-size:16px;line-height:1.4;color:var(--muted)}
+.order-card.revealed{background:var(--rbg);border-color:#eed8d0}
+.order-card.revealed .order-symbol{color:var(--rust)}
+.order-card .order-answer{font:19px/1.3 "DejaVu Sans Mono",monospace;overflow-wrap:anywhere}
+.mono-scene .conclusion{font-size:19px;gap:11px;padding:9px 13px}
+.mono-scene .conclusion .cause{margin-left:auto;border-left:1px solid #d7dced;padding-left:14px;font-size:17px;white-space:nowrap;color:var(--muted)}
+.mono-rules{padding:15px 19px;border:1px solid var(--line);background:#f8fafc;border-radius:11px;margin:11px 0 16px}
+.mono-rules .rule{display:grid;grid-template-columns:126px 1fr;gap:12px;align-items:center;margin:7px 0}
+.mono-rules .rule span{color:var(--muted);font-size:18px}
+.mono-rules code{font-size:19px}
+.mono-example-links{display:flex;gap:9px;flex-wrap:wrap;margin:15px 0}
+.mono-emphasis{padding:11px 16px;background:var(--vbg);border-radius:9px;color:var(--violet)}
+@media print{body{background:#fff}#stage{position:relative;transform:none!important;left:0!important;top:0!important}.overlay{display:none!important}}
+
+</style>
+</head>
+<body>
+<main id="stage" aria-label="浮点数运算：单页交互课件">
+<h1>浮点数运算</h1><p class="subtitle">先算精确值，再舍入</p>
+<nav class="nav" aria-label="实验切换"><div class="tabs" role="tablist"><button role="tab" data-mode="add">加法：舍入</button><button role="tab" data-mode="mul">乘法：溢出</button><button role="tab" data-mode="monotone">单调性</button><button role="tab" data-mode="special">特殊值</button></div><div class="navtools" id="navtools"></div></nav>
+<section class="scene" id="scene" role="tabpanel" aria-label="浮点数运算实验"></section>
+<div class="lawrow" aria-label="运算性质"><button class="law" data-info="commute"><span class="label">交换律 · 有限输入</span><span class="statement yes">加法、乘法可交换</span></button><button class="law" data-info="associate"><span class="label">结合律</span><span class="statement no">不保证成立</span></button><button class="law" data-info="monotone" title="点击演示：输入不同，结果却相等"><span class="label">单调性 · 有限输入</span><span class="statement no">不严格：&gt; 可能变成 =</span></button><button class="law" data-info="identity"><span class="label">单位元与逆元 · 有限 x</span><span class="statement"><code>x + 0 = x；x + (−x) = 0</code></span></button></div>
+<footer class="footer"><div class="status"><span id="dots" class="dots"></span><span id="status"></span></div><div class="controls"><button id="restart" title="R：重置当前实验">重置</button><button id="back" aria-label="上一步" title="左方向键">←</button><button id="play">▶ 播放</button><button id="next" class="primary" title="空格 / 右方向键">下一步 →</button></div></footer>
+<div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="dialogtitle"><div class="dialog"><div class="dialoghead"><h2 id="dialogtitle"></h2><button id="close">关闭 ×</button></div><div id="dialogbody" class="dialogbody"></div></div></div>
+<div class="sr-only" id="live" aria-live="polite"></div>
+</main>
+<script>
+'use strict';
+// Offline float model: exact rational inputs/intermediates and nearest-even rounding.
+// No fused operations, reassociation, exception traps, or NaN payload simulation.
+// Rounding reference: https://docs.nvidia.com/cuda/floating-point/index.html#operations-and-accuracy
+// Monotonicity: apply the same order-preserving rounding map to two exact results.
+// The decimal multiplication example follows the supplied slide: 100.00001f * 1.3f vs 100.0f * 1.3f.
+// All three inputs are rounded once to float; subsequent products use exact rational arithmetic.
+const $=id=>document.getElementById(id),stage=$('stage'),scene=$('scene');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const abs=n=>n<0n?-n:n;function gcd(a,b){a=abs(a);b=abs(b);while(b){let t=a%b;a=b;b=t}return a||1n}function rat(n,d=1n){if(d===0n)throw Error('分母为零');if(d<0n){n=-n;d=-d}const g=gcd(n,d);return {n:n/g,d:d/g}}function radd(a,b){return rat(a.n*b.d+b.n*a.d,a.d*b.d)}function rmul(a,b){return rat(a.n*b.n,a.d*b.d)}const bitlen=n=>n.toString(2).length;
+const buffer=new ArrayBuffer(4),dv=new DataView(buffer);function bits(x){dv.setFloat32(0,x,false);return dv.getUint32(0,false)}function frombits(b){dv.setUint32(0,b>>>0,false);return dv.getFloat32(0,false)}function hex(x){return '0x'+bits(x).toString(16).padStart(8,'0').toUpperCase()}function asrat(x){if(!Number.isFinite(x))return null;const b=bits(x),ex=(b>>>23)&255,fr=b&0x7fffff;let n=BigInt(ex?0x800000+fr:fr);if(b>>>31)n=-n;const e=(ex?ex-127:-126)-23;return e>=0?rat(n<<BigInt(e)):rat(n,1n<<BigInt(-e))}
+function round32(q,negativeZero=false){
+ if(q.n===0n)return negativeZero?-0:0;const neg=q.n<0n,N=abs(q.n),D=q.d;let k=bitlen(N)-bitlen(D);if(k>=0){if(N<(D<<BigInt(k)))k--}else if((N<<BigInt(-k))<D)k--;
+ if(k>128)return neg?-Infinity:Infinity;if(k< -151)return neg?-0:0;
+ const e=Math.max(k-23,-149),A=e>=0?N:N<<BigInt(-e),B=e>=0?D<<BigInt(e):D;let z=A/B;const rem=A%B;if(2n*rem>B||(2n*rem===B&&(z&1n)))z++;
+ if(!z)return neg?-0:0;if(bitlen(z)-1+e>127)return neg?-Infinity:Infinity;const value=Number(z)*2**e;return neg?-value:value;
+}
+function parse32(text){
+ const s=String(text).trim();if(!s||s.length>100)throw Error('请输入不超过 100 个字符的数值');if(/^[+]?inf(inity)?$/i.test(s))return Infinity;if(/^-inf(inity)?$/i.test(s))return -Infinity;if(/^nan$/i.test(s))return NaN;
+ const pow=/^([+-]?)2\^([+-]?\d+)$/.exec(s);if(pow){let e=Number(pow[2]);if(!Number.isSafeInteger(e)||Math.abs(e)>512)throw Error('指数请限制在 −512 到 512');let n=pow[1]==='-'?-1n:1n;return round32(e>=0?rat(n<<BigInt(e)):rat(n,1n<<BigInt(-e)))}
+ const m=/^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?\d+))?$/.exec(s);if(!m)throw Error('支持十进制、科学计数法、2^k、inf 或 NaN');const dec=m[3]??m[4]??'',whole=m[2]||'0';const exponent=Number(m[5]||0)-dec.length;if(!Number.isSafeInteger(exponent)||Math.abs(exponent)>512)throw Error('十进制指数绝对值请不超过 512');let n=BigInt(whole+dec);const negative=m[1]==='-';if(negative)n=-n;return round32(exponent>=0?rat(n*10n**BigInt(exponent)):rat(n,10n**BigInt(-exponent)),negative);
+}
+function decimal(q){
+ if(!q)return '';if(q.n===0n)return '0';let D=q.d,c2=0,c5=0;while(D%2n===0n){D/=2n;c2++}while(D%5n===0n){D/=5n;c5++}if(D!==1n)return q.n+'/'+q.d;
+ const d=Math.max(c2,c5);let N=abs(q.n)*2n**BigInt(d-c2)*5n**BigInt(d-c5);let s=N.toString().padStart(d+1,'0');if(d)s=(s.slice(0,-d)+'.'+s.slice(-d)).replace(/0+$/,'').replace(/\.$/,'');return (q.n<0n?'-':'')+s;
+}
+
+// Every numeric label is exact. Long dyadic values use an exact power expression.
+function signed(s){return String(s).replace(/-/g,'−')}
+function specialText(x){return Number.isNaN(x)?'NaN':x===Infinity?'+∞':x===-Infinity?'−∞':Object.is(x,-0)?'−0':'0'}
+function powHTML(base,k){return `<span class="power">${base}<sup>${signed(k)}</sup></span>`}
+function grouped(s){return /^-?\d{5,16}$/.test(s)?signed(s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')):signed(s)}
+function dyadic(q){let n=q.n,e=0,d=q.d;if(!n)return {n:0n,e:0};while(d>1n&&d%2n===0n){d/=2n;e--}if(d!==1n)return null;while(n%2n===0n){n/=2n;e++}return {n,e}}
+function representation(q,limit=26){
+ const full=decimal(q),normal=grouped(full),b=dyadic(q);
+ if(b&&abs(b.n)===1n&&full.length>16){const sign=b.n<0n?'−':'';return {html:sign+powHTML(2,b.e),text:sign+'2^'+b.e,full,kind:'power'}}
+ if(full.length<=limit)return {html:esc(normal),text:normal,full,kind:'decimal'};
+ if(b&&abs(b.n)===1n){const sign=b.n<0n?'−':'';return {html:sign+powHTML(2,b.e),text:sign+'2^'+b.e,full,kind:'power'}}
+ const sign=full.startsWith('-')?'−':'',body=full.replace(/^-/,'');let [i,f='']=body.split('.');let digits,exp;
+ if(i!=='0'){exp=i.length-1;digits=(i+f).replace(/0+$/,'')}else{const first=f.search(/[1-9]/);exp=-first-1;digits=f.slice(first).replace(/0+$/,'')}
+ const mantissa=digits.length>1?digits[0]+'.'+digits.slice(1):digits;
+ const sci={html:esc(sign+mantissa)+' × '+powHTML(10,exp),text:sign+mantissa+' × 10^'+exp,full,kind:'scientific'};
+ if(sci.text.length<=limit)return sci;
+ if(b&&b.e!==0){const coeff=signed(b.n.toString()),bp={html:esc(coeff)+' × '+powHTML(2,b.e),text:coeff+' × 2^'+b.e,full,kind:'power'};if(bp.text.length<normal.length&&bp.text.length<=sci.text.length)return bp}
+ return normal.length<=sci.text.length?{html:esc(normal),text:normal,full,kind:'decimal'}:sci;
+}
+function reprValue(x,limit=26){return !Number.isFinite(x)||x===0?{html:esc(specialText(x)),text:specialText(x),full:specialText(x),kind:'special'}:representation(asrat(x),limit)}
+function describeValue(x){return Number.isFinite(x)?Object.is(x,-0)?'-0':decimal(asrat(x)):specialText(x)}
+function stepOp(a,b,op){
+ if(!Number.isFinite(a)||!Number.isFinite(b)){const value=op==='+'?a+b:a*b;return {a,b,op,q:null,value,kind:Number.isNaN(value)?'invalid':'infinite',exact:specialText(value)}}
+ const q=op==='+'?radd(asrat(a),asrat(b)):rmul(asrat(a),asrat(b));let nz=false;
+ if(q.n===0n)nz=op==='*'?(a<0||Object.is(a,-0))!==(b<0||Object.is(b,-0)):Object.is(a,-0)&&Object.is(b,-0);
+ const value=round32(q,nz);let kind='exact';
+ if(!Number.isFinite(value))kind='overflow';else{const out=asrat(value);if(out.n*q.d!==q.n*out.d)kind=value===0&&q.n!==0n?'underzero':'round'}
+ return {a,b,op,q,value,kind,exact:decimal(q)};
+}
+const defaults={add:['2^24','1','-2^24'],mul:['2^80','2^80','2^-80']};
+const monoCases=[
+ {id:'add',name:'加法：大整数 + 1',op:'+',raw:['16777216','16777215','1']},
+ {id:'mul-round',name:'乘法：100.00001 × 1.3',op:'*',raw:['100.00001','100','1.3']},
+ {id:'mul-overflow',name:'乘法：同时溢出',op:'*',raw:['2^100','2^99','2^30']}
+];
+let state={mode:'add',raw:defaults.add.slice(),phase:0,special:0,cx:'NaN',cy:'NaN',cmp:'==',playing:false,monoCase:'add',monoOp:'+'};
+let timer=0,busy=false,runID=0,flyAnimations=[],focusBefore=null;const details={};
+function model(){const [a,b,c]=state.raw.map(parse32),op=state.mode==='mul'?'*':'+';const l1=stepOp(a,b,op),r1=stepOp(b,c,op);return {a,b,c,op,l1,r1,l2:stepOp(l1.value,c,op),r2:stepOp(a,r1.value,op)}}
+function phases(){return state.mode==='special'?2:state.mode==='monotone'?3:4}
+function stepText(){if(state.mode==='monotone')return ['已知 a > b；先预测运算后的大小关系。','精确结果已显示；它们仍不相等吗？','保存为 float；观察两个值的变化。','严格不等式可能变成相等，不是顺序被舍入颠倒。'][state.phase];return state.mode==='special'?['先预测，再看结果。','运算结果已显示；再看比较。','改变比较值或运算符，继续观察。'][state.phase]:['空格 / →：逐步演示。','算括号内的精确值。','舍入为 float，作为下一步输入。','用已舍入的值，继续精确运算。','再次舍入，比较最终结果。'][state.phase]}
+function setMode(mode){
+ if(!['add','mul','monotone','special'].includes(mode))return;stop();state.mode=mode;state.phase=0;
+ if(defaults[mode])state.raw=defaults[mode].slice();
+ if(mode==='monotone'){const p=monoCases.find(x=>x.id===state.monoCase)||monoCases[0];state.monoCase=p.id;state.monoOp=p.op;state.raw=p.raw.slice()}
+ render();
+}
+function setMonoCase(id){const p=monoCases.find(x=>x.id===id);if(!p)return;stop();state.mode='monotone';state.monoCase=p.id;state.monoOp=p.op;state.raw=p.raw.slice();state.phase=0;render()}
+function monoModel(){const [a,b,c]=state.raw.map(parse32),op=state.monoOp;return {a,b,c,op,left:stepOp(a,c,op),right:stepOp(b,c,op)}}
+function validateMono(raw){const [a,b,c]=raw.map(parse32);if(![a,b,c].every(Number.isFinite))throw Error('本实验要求 a、b、c 都是有限 float。');if(!(a>b))throw Error(a===b?'输入保存为 float 后 a 与 b 已经相等。请选取两个不同的 float，并满足 a > b。':'本实验固定 a > b，请调整 a 和 b。')}
+
+function resultDetail(st){
+ if(st.kind==='overflow')return '溢出';if(st.kind==='underzero')return '舍入到 0';if(st.kind==='invalid')return '无效运算';if(st.kind==='infinite')return '仍为无穷大';
+ if(st.kind==='round'){const q=radd(asrat(st.value),rat(-st.q.n,st.q.d)),r=representation(q,15);if(r.text.length<=17)return '误差 '+(q.n>0n?'+':'')+r.text;return '已舍入'}return '精确表示';
+}
+function exactRep(st){
+ const r=st.q?representation(st.q):reprValue(st.value);
+ if(st.q&&st.op==='+'&&r.text.length>45){const a=reprValue(st.a,16),b=reprValue(Math.abs(st.b),16),op=st.b<0?'−':'+';const text=a.text+' '+op+' '+b.text;if(text.length<r.text.length)return {html:a.html+' '+op+' '+b.html,text,full:r.full,kind:'sum'}}
+ return r;
+}
+function cell(st,type,key,shown,fresh,first=false){
+ const exact=type==='exact';const rep=shown?(exact?exactRep(st):reprValue(st.value)):{html:'?',text:'?',full:''};
+ const changed=shown&&!exact&&['round','overflow','underzero','invalid'].includes(st.kind);
+ const note=shown?(exact?(st.q?'尚未舍入':'特殊值'):resultDetail(st)):'　';
+ details[key]=st;
+ return `<div class="cell ${type} ${first?'first':''} ${shown?'':'wait'} ${changed?'changed':''} ${fresh?'fresh':''}" ${shown?`data-detail="${key}" tabindex="0" role="button" aria-label="查看完整精确值" title="${esc(rep.full)}"`:''}><div class="number ${rep.text.length>33?'long':rep.text.length>19?'medium':''}">${rep.html}</div><div class="detail">${esc(note)}</div></div>`;
+}
+function branchScene(fresh){
+ const m=model(),op=m.op==='*'?'×':'+',thirdExact=state.phase===3;
+ const input=[m.a,m.b,m.c].map((v,i)=>`<code title="${esc(describeValue(v))}">${['a','b','c'][i]} = ${reprValue(v,17).html}</code>`).join('');
+ const prompts=['先预测两条路径的结果，再逐步验证。','精确值尚未舍入。','保存舍入后的结果，再继续运算。','这一步使用的是已经舍入的中间结果。'];
+ let message=prompts[state.phase],verdict='';
+ if(state.phase===4){const l=m.l2.value,r=m.r2.value;if(Number.isNaN(l)||Number.isNaN(r)){message='结果含 NaN，不能通过 == 判断数值相等。'}else if(l===r){message='本组结果相等，但结合律并不总成立。'}else{message=(state.mode==='mul'?'乘法':'加法')+'不保证结合律。'}const L=reprValue(l,15),R=reprValue(r,15);verdict=`<strong class="${L.text.length+R.text.length>27?'mini':''}">${L.html} ${Number.isNaN(l)||Number.isNaN(r)?'/':l===r?'=':'≠'} ${R.html}</strong>`}
+ scene.innerHTML=`<div class="scenehead"><h2>只换括号，结果相同吗？</h2><div class="inputline"><small>float 输入</small>${input}</div></div><div class="colheads"><div>运算顺序</div><div>① 内层精确值</div><div>② 舍入为 float</div><div>${state.phase<3?'③ 外层运算 → ④ 舍入':thirdExact?'③ 外层精确值':'④ 最终 float 结果'}</div></div><div class="lane"><div class="laneexpr">(a ${op} b) ${op} c<small>先算 a ${op} b</small></div>${cell(m.l1,'exact','l1exact',state.phase>=1,fresh&&state.phase===1,true)}${cell(m.l1,'round','l1round',state.phase>=2,fresh&&state.phase===2)}${cell(m.l2,thirdExact?'exact':'final','l2',state.phase>=3,fresh&&state.phase>=3)}</div><div class="lane"><div class="laneexpr">a ${op} (b ${op} c)<small>先算 b ${op} c</small></div>${cell(m.r1,'exact','r1exact',state.phase>=1,fresh&&state.phase===1,true)}${cell(m.r1,'round','r1round',state.phase>=2,fresh&&state.phase===2)}${cell(m.r2,thirdExact?'exact':'final','r2',state.phase>=3,fresh&&state.phase>=3)}</div><div class="conclusion ${state.phase===4?'revealed':''}">${verdict}<span>${message}</span></div>`;
+}
+
+function monoRep(st){
+ if(!st.q)return reprValue(st.value);
+ const full=decimal(st.q),d=dyadic(st.q);
+ // Preserve exact decimals (including the supplied 100.00001f / 1.3f example).
+ if(full.length<=50&&!(d&&abs(d.n)===1n&&full.length>23))return {html:esc(grouped(full)),text:grouped(full),full};
+ return exactRep(st);
+}
+function monoCell(st,exact,key,shown,fresh){
+ const r=shown?(exact?monoRep(st):reprValue(st.value)):{html:'?',text:'?',full:''};
+ const changed=shown&&!exact&&st.kind!=='exact';
+ const roundedNote=st.kind==='round'?(asrat(st.value).n*st.q.d<st.q.n*asrat(st.value).d?'舍入后减小':'舍入后增大'):resultDetail(st);
+ details[key]=st;
+ return `<div class="cell ${exact?'exact first':'round'} ${shown?'':'wait'} ${changed?'changed':''} ${fresh?'fresh':''}" ${shown?`data-detail="${key}" tabindex="0" role="button" aria-label="查看这一步的完整精确值" title="${esc(r.full)}"`:''}><div class="number ${r.text.length>33?'long':r.text.length>19?'medium':''}">${r.html}</div><div class="detail">${shown?(exact?'尚未舍入':esc(roundedNote)):'　'}</div></div>`;
+}
+function monotoneScene(fresh){
+ const m=monoModel(),mul=m.op==='*',op=mul?'×':'+',negative=mul&&m.c<0,zero=mul&&m.c===0,equal=m.left.value===m.right.value;
+ const eqsymbol=equal?'=':m.left.value>m.right.value?'>':'<';
+ const bothOverflow=m.left.kind==='overflow'&&m.right.kind==='overflow';
+ const c=reprValue(m.c,32),same=reprValue(m.left.value,24);
+ const labels=['加上同一个','乘以同一个'];
+ const input=(v,label)=>{const r=reprValue(v,32);return `<div class="laneexpr mono-input">${label} ${op} c<small><span class="input-label">${label} = </span><span class="mono input-value" title="${esc(r.full)}">${r.html}</span></small></div>`};
+ let message=state.phase===0?'输入已经是不同的 float；严格不等式还会保留吗？':state.phase===1?(zero?'乘以 0 时，精确结果本来就相等。':`精确结果满足 ${negative?'<':'>'}；接下来把它们保存为 float。`):state.phase===2?'两条路径使用同一个舍入规则；再比较最终结果。':'';
+ let cause='';
+ if(state.phase===3){
+  if(zero){message='乘数为 0，实数运算本来就相等；这不是舍入造成的。';cause='不是舍入反例'}
+  else if(equal){message=`${negative?'<':'>'} 变成 =：不严格单调，并不是${negative?'反向':'大小'}顺序被舍入颠倒。`;cause=bothOverflow?'两个精确结果同时溢出':'两个精确结果舍入到同一值'}
+  else{message=`本组仍满足 ${eqsymbol}，但${mul?'乘法':'加法'}不保证严格单调。`;cause=negative?'负乘数使原有顺序反向':'其他输入仍可能得到相等结果'}
+ }
+ scene.innerHTML=`<div class="scenehead"><h2>${negative?'负乘数反向后，严格不等式还保留吗？':'输入更大，结果一定更大吗？'}</h2><div class="mono-fixed"><span>${labels[mul?1:0]}</span><code title="${esc(c.full)}">c = ${c.html}</code></div></div>
+ <div class="mono-layout"><div class="mono-table"><div class="colheads"><div>① 不同的 float 输入</div><div>② 精确运算结果</div><div>③ 保存为 float</div></div>
+ <div class="lane">${input(m.a,'a')}${monoCell(m.left,true,'mono-lexact',state.phase>=1,fresh&&state.phase===1)}${monoCell(m.left,false,'mono-lround',state.phase>=2,fresh&&state.phase===2)}</div>
+ <div class="lane">${input(m.b,'b')}${monoCell(m.right,true,'mono-rexact',state.phase>=1,fresh&&state.phase===1)}${monoCell(m.right,false,'mono-rround',state.phase>=2,fresh&&state.phase===2)}</div></div>
+ <div class="order-card ${state.phase===3?'revealed fresh':''}"><div class="order-label">输入比较</div><div class="order-input">a &gt; b</div><div class="order-arrow">↓</div><div class="order-label">float 结果比较</div><div class="order-symbol" id="mono-order-target">${state.phase===3?esc(eqsymbol):'?'}</div><div class="order-sub">${state.phase===3?(equal?`都得到 <span class="order-answer">${same.html}</span>`:'本组仍然不相等'):'严格不等式还在吗？'}</div></div></div>
+ <div class="conclusion ${state.phase===3?'revealed':''}"><span>${message}</span>${cause?`<span class="cause">${cause}</span>`:''}</div>`;
+}
+
+const specialCases=[
+ {label:'0 / 0',expr:'0 / 0',run:()=>0/0,note:'不定形式，得到 NaN。'},
+ {label:'∞ − ∞',expr:'(+∞) − (+∞)',run:()=>Infinity-Infinity,note:'不定形式，得到 NaN。'},
+ {label:'∞ × 0',expr:'(+∞) × 0',run:()=>Infinity*0,note:'无效运算，得到 NaN。'},
+ {label:'NaN + 1',expr:'NaN + 1',run:()=>NaN+1,note:'NaN 随运算传播。'},
+ {label:'1 / (+0)',expr:'1 / (+0)',run:()=>1/0,note:'结果为 +∞。'},
+ {label:'1 / (−0)',expr:'1 / (−0)',run:()=>1/(-0),note:'结果为 −∞，零的符号保留下来。'}
+];
+const cvals={'NaN':NaN,'+∞':Infinity,'−∞':-Infinity,'+0':0,'−0':-0,'1':1};
+const cmpf={'<':(x,y)=>x<y,'<=':(x,y)=>x<=y,'==':(x,y)=>x===y,'!=':(x,y)=>x!==y,'>=':(x,y)=>x>=y,'>':(x,y)=>x>y};
+function specialScene(fresh){
+ const c=specialCases[state.special],result=c.run(),x=cvals[state.cx],y=cvals[state.cy],answer=cmpf[state.cmp](x,y);
+ const options=sel=>Object.keys(cvals).map(k=>`<option value="${esc(k)}" ${k===sel?'selected':''}>${esc(k)}</option>`).join('');
+ const message=Number.isNaN(x)||Number.isNaN(y)?'与 NaN 比较：<、≤、>、≥、== 均为 false，!= 为 true。':x===0&&y===0?'+0 与 −0 比较相等，但它们的倒数不同。':'无穷大可以比较：−∞ < 任意有限数 < +∞。';
+ scene.innerHTML=`<div class="scenehead"><h2>特殊值怎样运算、怎样比较？</h2><span class="hint">所有除法均为浮点除法</span></div><div class="special-layout"><div><div class="specchoices">${specialCases.map((c,i)=>`<button data-spec="${i}" class="${i===state.special?'active':''}">${esc(c.label)}</button>`).join('')}</div><div class="special-result"><span class="expr">${esc(c.expr)}</span><span style="font-size:27px;color:var(--muted)">→</span><span class="answer ${state.phase<1?'q':fresh?'fresh':''}">${state.phase>=1?specialText(result):'?'}</span></div><div class="specnote">${state.phase>=1?esc(c.note):'先猜结果，再按“下一步”。'}</div></div><div class="compare"><p class="compare-title">换一换比较值与运算符</p><div class="comparands"><select id="cx" aria-label="左侧比较值">${options(state.cx)}</select><span>比较</span><select id="cy" aria-label="右侧比较值">${options(state.cy)}</select></div><div class="oprow">${Object.keys(cmpf).map(k=>`<button data-cmp="${esc(k)}" class="${state.cmp===k?'active':''}">${esc(k)}</button>`).join('')}</div><div class="comparison-result">${esc(state.cx+' '+state.cmp+' '+state.cy)} → <b>${state.phase>=2?answer:'?'}</b></div></div></div><div class="conclusion ${state.phase>=2?'revealed':''}"><span>${state.phase>=2?message:'±0 的数值相等；在除法中观察符号的影响。'}</span></div>`;
+ $('cx').onchange=e=>{state.cx=e.target.value;render()};$('cy').onchange=e=>{state.cy=e.target.value;render()};
+}
+function fitNumbers(){
+ scene.querySelectorAll('.cell .number').forEach(el=>{if(el.textContent.length<=32)el.style.whiteSpace='nowrap';let size=parseFloat(getComputedStyle(el).fontSize);const avail=el.parentElement.clientHeight-47;while((el.scrollHeight>avail||el.scrollWidth>el.clientWidth+1)&&size>13){size-=.5;el.style.fontSize=size+'px'}});
+ const inputs=scene.querySelector('.inputline');if(inputs){let size=18;while(inputs.scrollHeight>48&&size>14){size-=.5;inputs.style.fontSize=size+'px'}}
+}
+function render(fresh=false){
+ document.querySelectorAll('.tabs [data-mode]').forEach(b=>{const on=b.dataset.mode===state.mode;b.classList.toggle('active',on);b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1});
+ scene.classList.toggle('mono-scene',state.mode==='monotone');
+ document.querySelector('[data-info="monotone"]').classList.toggle('active',state.mode==='monotone');
+ if(state.mode==='monotone'){
+  $('navtools').innerHTML=`<select id="mono-preset" aria-label="单调性示例">${monoCases.map(x=>`<option value="${x.id}" ${x.id===state.monoCase?'selected':''}>${x.name}</option>`).join('')}${state.monoCase==='custom'?'<option value="custom" selected>自定义输入</option>':''}</select><button id="mono-rules">说明</button><button id="edit">改输入</button>`;
+  $('mono-preset').onchange=e=>setMonoCase(e.target.value);$('mono-rules').onclick=showMonotoneInfo;$('edit').onclick=editInputs;monotoneScene(fresh);
+ }else if(defaults[state.mode]){$('navtools').innerHTML='<span class="hint">最近偶数舍入</span><button id="edit">改输入</button>';$('edit').onclick=editInputs;branchScene(fresh)}else{$('navtools').innerHTML='';specialScene(fresh)}
+ stage.dataset.mode=state.mode;stage.dataset.phase=state.phase;fitNumbers();updateFooter();$('live').textContent=stepText();
+}
+function updateFooter(){$('dots').innerHTML=Array.from({length:phases()},(_,i)=>`<i class="${i<state.phase?'done':''}"></i>`).join('');$('status').textContent=state.phase+'/'+phases()+' · '+stepText();$('back').disabled=state.phase===0||busy;$('next').textContent=state.phase===phases()?'重新演示 ↺':'下一步 →';$('next').disabled=busy;$('play').textContent=state.playing?'Ⅱ 暂停':'▶ 播放'}
+function clearFlying(){flyAnimations.forEach(a=>a.cancel());flyAnimations=[];document.querySelectorAll('.transport').forEach(e=>e.remove());busy=false}
+function stop(){runID++;clearTimeout(timer);timer=0;state.playing=false;clearFlying()}
+async function transfer(oldPhase){
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches||(!defaults[state.mode]&&state.mode!=='monotone')||![1,2].includes(oldPhase))return;
+ if(state.mode==='monotone'){await monoTransfer(oldPhase);return;}
+ const scale=stage.getBoundingClientRect().width/1440,base=stage.getBoundingClientRect(),jobs=[];
+ scene.querySelectorAll('.lane').forEach(lane=>{const cells=lane.querySelectorAll('.cell'),src=cells[oldPhase-1],dst=cells[oldPhase],a=src.getBoundingClientRect(),b=dst.getBoundingClientRect(),el=document.createElement('div');el.className='transport';el.innerHTML=src.querySelector('.number').innerHTML;el.style.left=(a.left-base.left+a.width/2)/scale+'px';el.style.top=(a.top-base.top+a.height/2)/scale+'px';stage.appendChild(el);const anim=el.animate([{transform:'translate(-50%, -50%)',opacity:.8},{transform:`translate(calc(-50% + ${(b.left-a.left)/scale}px), -50%)`,opacity:0}],{duration:550,easing:'cubic-bezier(.2,.6,.2,1)',fill:'forwards'});flyAnimations.push(anim);jobs.push(anim.finished.catch(()=>{}).then(()=>el.remove()))});
+ await Promise.all(jobs);flyAnimations=[];
+}
+
+async function monoTransfer(oldPhase){
+ const scale=stage.getBoundingClientRect().width/1440,base=stage.getBoundingClientRect(),jobs=[];
+ scene.querySelectorAll('.mono-table .lane').forEach((lane,index)=>{
+  const cells=lane.querySelectorAll('.cell'),src=cells[oldPhase===1?0:1],dst=oldPhase===1?cells[1]:$('mono-order-target');
+  const a=src.getBoundingClientRect(),b=dst.getBoundingClientRect(),el=document.createElement('div');el.className='transport';el.innerHTML=src.querySelector('.number').innerHTML;
+  el.style.maxWidth='410px';el.style.whiteSpace='normal';el.style.textAlign='center';el.style.fontSize=src.querySelector('.number').textContent.length>35?'17px':'22px';
+  const x=(a.left+a.width/2-base.left)/scale,y=(a.top+a.height/2-base.top)/scale;
+  const tx=(b.left+b.width/2-base.left)/scale,ty=(b.top+b.height/2-base.top)/scale;
+  el.style.left=x+'px';el.style.top=y+'px';stage.appendChild(el);
+  const anim=el.animate([{transform:'translate(-50%, -50%)',opacity:.85},{transform:`translate(calc(-50% + ${tx-x}px),calc(-50% + ${ty-y}px)) scale(${oldPhase===2?.72:1})`,opacity:0}],{duration:650,easing:'cubic-bezier(.2,.6,.2,1)',fill:'forwards'});
+  flyAnimations.push(anim);jobs.push(anim.finished.catch(()=>{}).then(()=>el.remove()));
+ });
+ await Promise.all(jobs);flyAnimations=[];
+}
+
+async function advance(fromPlay=false){
+ if(busy||$('overlay').classList.contains('open'))return;if(!fromPlay){clearTimeout(timer);state.playing=false}
+ if(state.phase>=phases()){state.phase=0;render();return}
+ busy=true;updateFooter();const p=state.phase,id=runID;await transfer(p);if(id!==runID)return;busy=false;if(state.phase!==p)return;state.phase++;render(true);
+ if(state.playing){if(state.phase<phases())timer=setTimeout(()=>advance(true),1450);else{state.playing=false;updateFooter()}}
+}
+function autoplay(){if(state.playing){stop();updateFooter();return}if(state.phase===phases())state.phase=0;state.playing=true;render();timer=setTimeout(()=>advance(true),200)}
+function reset(){stop();state.phase=0;render()}
+function openDialog(title,body){stop();updateFooter();focusBefore=document.activeElement;$('dialogtitle').textContent=title;$('dialogbody').innerHTML=body;$('overlay').classList.add('open');$('close').focus()}
+function closeDialog(){$('overlay').classList.remove('open');if(focusBefore?.isConnected)focusBefore.focus()}
+function editInputs(){
+ openDialog('修改 float 输入',`<p>支持十进制、科学计数法和 <code>2^24</code>。${state.mode==='monotone'?' 本实验要求保存后的输入满足 <code>a &gt; b</code>。':''}</p>${state.mode==='monotone'?`<div class="edit-actions"><button id="mono-add" class="${state.monoOp==='+'?'active':''}">加法：a + c 与 b + c</button><button id="mono-mul" class="${state.monoOp==='*'?'active':''}">乘法：a × c 与 b × c</button></div>`:''}<div class="editgrid">${['a','b','c'].map((v,i)=>`<label>${v}<input id="input-${v}" value="${esc(state.raw[i])}" spellcheck="false" maxlength="100" aria-label="输入 ${v}"></label>`).join('')}</div><div id="editerror" class="editerror"></div><div class="edit-actions"><button id="apply" class="primary">应用并重新演示</button><button id="default-input">恢复默认输入</button></div><p class="note">输入和每一步结果均按最近偶数规则舍入为 float。主画面展示实际保存的值。</p>`);
+ $('apply').onclick=()=>{try{const raw=['a','b','c'].map(v=>$('input-'+v).value.trim());raw.forEach(parse32);if(state.mode==='monotone'){validateMono(raw);state.monoCase='custom';state.monoOp=$('mono-mul').classList.contains('active')?'*':'+';}state.raw=raw;state.phase=0;closeDialog();render()}catch(e){$('editerror').textContent=e.message}};
+ $('default-input').onclick=()=>{const raw=state.mode==='monotone'?(monoCases.find(x=>x.id===state.monoCase)||monoCases.find(x=>x.op===state.monoOp)).raw:defaults[state.mode];raw.forEach((v,i)=>$('input-'+['a','b','c'][i]).value=v)};
+ if(state.mode==='monotone'){
+  $('mono-add').onclick=()=>{$('mono-add').classList.add('active');$('mono-mul').classList.remove('active')};
+  $('mono-mul').onclick=()=>{$('mono-mul').classList.add('active');$('mono-add').classList.remove('active')};
+ }
+ ['a','b','c'].forEach(v=>$('input-'+v).addEventListener('keydown',e=>{if(e.key==='Enter')$('apply').click()}));
+}
+function showDetail(key){
+ const s=details[key];if(!s)return;
+ openDialog('精确值',`<table><tr><th>输入</th><th>精确十进制值</th><th>位模式</th></tr>${[[s.a,'a / b'],[s.b,'b / c']].map(([v],i)=>`<tr><td>${i?'右操作数':'左操作数'}</td><td><code>${esc(describeValue(v))}</code></td><td><code>${hex(v)}</code></td></tr>`).join('')}</table><h3>${s.q?'精确运算结果':'特殊值结果'}</h3><div class="exactdump">${esc(s.exact)}</div><h3>保存为 float</h3><div class="exactdump">${esc(describeValue(s.value))}</div><p class="note" style="margin-top:13px">${esc(resultDetail(s))}。幂式是精确表示，不是近似值。</p>`);
+}
+const info={
+ commute:['交换律',`<p>对有限输入，加法、乘法满足交换律：</p><p><code>fl(a + b) = fl(b + a)<br>fl(a × b) = fl(b × a)</code></p><p>精确结果相同，按同一规则舍入后也相同。</p>`],
+ associate:['结合律',`<p><code>fl(fl(a ∘ b) ∘ c)</code> 与 <code>fl(a ∘ fl(b ∘ c))</code> 不一定相等。</p><p>改变括号，会改变中间的舍入或溢出。已经丢失的信息，后续运算不会自动找回。</p>`],
+ monotone:['不严格单调：严格不等式可能变成相等',`<p class="mono-emphasis"><strong>仍然单调，但不保证严格单调。</strong><br>加法或乘以正数时，更大的输入不会得到更小的结果，却可能得到相同结果。</p><p>设 <code>a ≥ b</code>，且 a、b、c 均为有限 float：</p><div class="mono-rules"><div class="rule"><span>加法</span><code>fl(a + c) ≥ fl(b + c)</code></div><div class="rule"><span>乘法 · c ≥ 0</span><code>fl(a × c) ≥ fl(b × c)</code></div><div class="rule"><span>乘法 · c ≤ 0</span><code>fl(a × c) ≤ fl(b × c)</code></div></div><p>即使 <code>a &gt; b</code>，两个不同的精确结果也可能<strong>舍入到同一值</strong>，或<strong>同时溢出为同号无穷大</strong>。</p><div class="mono-example-links"><button data-monodemo="add">演示：加法舍入</button><button data-monodemo="mul-round">演示：乘法舍入</button><button data-monodemo="mul-overflow">演示：同时溢出</button></div><p class="note">fl 表示按最近偶数规则保存为 float；不含 NaN 输入。乘以负数时，反向是乘法本来的性质，不是舍入颠倒了顺序。乘以 0 本来就得到相等结果。</p>`],
+ identity:['单位元与逆元',`<p>对有限 x，按数值相等理解：</p><p><code>fl(x + 0) = x<br>fl(x + (−x)) = 0</code></p><p class="note">+0 与 −0 数值相等，位模式不同。以上结论不包含 NaN 和无穷大。</p>`]
+};
+scene.addEventListener('click',e=>{const d=e.target.closest('[data-detail]');if(d){showDetail(d.dataset.detail);return}const s=e.target.closest('[data-spec]');if(s){stop();state.special=Number(s.dataset.spec);state.phase=0;render();return}const c=e.target.closest('[data-cmp]');if(c){state.cmp=c.dataset.cmp;render()}});
+scene.addEventListener('keydown',e=>{const d=e.target.closest('[data-detail]');if(d&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();showDetail(d.dataset.detail)}});
+document.querySelectorAll('.tabs [data-mode]').forEach(b=>{b.onclick=()=>setMode(b.dataset.mode);b.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();e.stopPropagation();const tabs=[...document.querySelectorAll('.tabs [data-mode]')],i=tabs.indexOf(b),next=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];setMode(next.dataset.mode);next.focus()}})});
+function showMonotoneInfo(){openDialog(...info.monotone);$('dialogbody').querySelectorAll('[data-monodemo]').forEach(b=>b.onclick=()=>{closeDialog();setMonoCase(b.dataset.monodemo)})}
+ document.querySelectorAll('[data-info]').forEach(b=>b.onclick=()=>{if(b.dataset.info==='monotone'){if(state.mode==='monotone')showMonotoneInfo();else setMode('monotone')}else openDialog(...info[b.dataset.info])});
+$('close').onclick=closeDialog;$('overlay').onclick=e=>{if(e.target===$('overlay'))closeDialog()};$('next').onclick=()=>advance();$('back').onclick=()=>{stop();state.phase=Math.max(0,state.phase-1);render()};$('play').onclick=autoplay;$('restart').onclick=reset;
+document.addEventListener('keydown',e=>{
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ if($('overlay').classList.contains('open')){if(e.key==='Escape'){e.preventDefault();closeDialog()}if(e.key==='Tab'){const items=[...$('overlay').querySelectorAll('button,input,select,[tabindex="0"]')],first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}return}
+ if(e.target.closest('input,select,textarea,[role="button"]'))return;if(e.target.closest('button')&&e.code==='Space')return;
+ if(e.code==='Space'||e.key==='ArrowRight'){e.preventDefault();advance()}else if(e.key==='ArrowLeft'){e.preventDefault();$('back').click()}else if(e.key.toLowerCase()==='r'){e.preventDefault();reset()}
+});
+function resize(){const z=Math.min(innerWidth/1440,innerHeight/810);stage.style.transform='scale('+z+')';stage.style.left=(innerWidth-1440*z)/2+'px';stage.style.top=(innerHeight-810*z)/2+'px'}
+addEventListener('resize',resize);addEventListener('pagehide',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();updateFooter()}});
+const params=new URLSearchParams(location.search);if(['add','mul','monotone','special'].includes(params.get('mode')))state.mode=params.get('mode');if(defaults[state.mode])state.raw=defaults[state.mode].slice();if(state.mode==='monotone'){const p=monoCases.find(x=>x.id===params.get('example'))||monoCases[0];state.monoCase=p.id;state.monoOp=p.op;state.raw=p.raw.slice()}state.phase=Math.max(0,Math.min(phases(),Math.trunc(Number(params.get('step')))||0));
+// Exposed for inspecting the numerical model and driving classroom demonstrations.
+window.floatOps={parse32,round32,rat,asrat,radd,rmul,stepOp,decimal,bits,frombits,model,monoModel,representation,reset,advance,stop,setMode,setMonoCase,getState:()=>({...state,raw:state.raw.slice()}),setPhase(p){stop();state.phase=Math.max(0,Math.min(phases(),Math.trunc(p)||0));render()},setInput(raw){if(raw.length!==3)throw Error('需要三个输入');raw.forEach(parse32);if(state.mode==='monotone'){validateMono(raw);state.monoCase='custom'}state.raw=raw.slice();state.phase=0;render()}};
+resize();render();
+</script>
+</body>
+</html>

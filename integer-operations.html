@@ -1,0 +1,258 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>整型运算</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:#EAF0F5;color:#14283E;font-family:"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif}
+#stage{width:1440px;height:810px;position:absolute;transform-origin:top left;background:#FBFCFE;overflow:hidden}#drawing{width:1440px;height:810px}svg text{user-select:none}.choice{cursor:pointer}.choice:hover{filter:brightness(.8)}
+#controls{position:absolute;left:64px;right:64px;top:760px;display:flex;gap:7px;align-items:center;height:36px}#nav,#context{display:flex;align-items:center;gap:7px}#context{margin-left:auto}
+button{font:inherit;font-size:16px;border:1px solid #D5DDE8;border-radius:7px;background:#fff;color:#14283E;padding:0 13px;height:35px;cursor:pointer;white-space:nowrap}button:hover{background:#EEF0FC;border-color:#515EC2}button.active{background:#EEEFFC;color:#515EC2;border-color:#515EC2}button.primary{background:#515EC2;color:white;border-color:#515EC2}button:focus-visible,[tabindex]:focus-visible{outline:3px solid #8995DF;outline-offset:3px}
+#live{position:absolute;left:-9999px} .micro{font-size:14px;color:#68798D;margin:0 10px}
+</style></head><body><main id="stage" aria-label="整型运算交互课件"><div id="drawing"></div><div id="controls"><div id="nav" aria-label="操作类别"></div><div id="context" aria-label="演示控制"></div></div><div id="live" aria-live="polite"></div></main><script>
+/* Original teaching structure: 02-Representation.pptx, pp.21–23.
+ * Mathematical examples below are derived from its fixed-width two's-complement model.
+ * Supplemental C portability boundaries are identified as C 语义补充.
+ * No simulation result for signed overflow is presented as a guaranteed C result.
+ */
+'use strict';
+const C={ink:'14283E',muted:'68798D',line:'DCE4ED',sign:'B85E4D',signBg:'F9EBE6',exp:'515EC2',expBg:'EEEFFC',frac:'157F79',fracBg:'E6F3F0',paper:'FBFCFE',white:'FFFFFF'};
+const FONT='Noto Sans CJK SC',MONO='DejaVu Sans Mono';
+const W=4, MOD=16;
+const mod=(x,n=MOD)=>((x%n)+n)%n;
+const bits=(x,w=4)=>mod(x,2**w).toString(2).padStart(w,'0');
+const signed=(x,w=4)=>{const u=mod(x,2**w);return u>=2**(w-1)?u-2**w:u;};
+const fmt=x=>String(Object.is(x,-0)?0:x).replace(/-/g,'−');
+function arithmetic(a,b,op='add'){
+ if(!Number.isInteger(a)||a<0||a>15||!Number.isInteger(b)||b<0||b>15||!['add','sub','mul'].includes(op))throw new RangeError('四位位模式须为 0–15，运算须为 add/sub/mul');
+ const fn=op==='add'?((x,y)=>x+y):op==='sub'?((x,y)=>x-y):((x,y)=>x*y),u=fn(a,b),s=fn(signed(a),signed(b)),r=mod(u);
+ const carries=[0];for(let i=0;i<4;i++)carries.push(Math.floor((((a>>i)&1)+((b>>i)&1)+carries[i])/2));
+ return {a,b,op,u,s,r,sr:signed(r),uw:u<0||u>15,so:s< -8||s>7,carry:Math.floor((a+b)/16),borrow:a<b?1:0,carries};
+}
+function shifting(a,k=1){
+ if(!Number.isInteger(a)||a<0||a>15||!Number.isInteger(k)||k<0||k>=4)throw new RangeError('0≤a≤15，0≤k<4');
+ const s=signed(a),p=2**k,bias=s<0?p-1:0,q=Math.trunc(s/p);
+ return {a,k,s,p,bias,q:Object.is(q,-0)?0:q,ar:Math.floor(s/p),lr:Math.floor(a/p),left:mod(a*p),adjusted:s+bias,corrected:Math.floor((s+bias)/p)};
+}
+function baseState(){return {mode:'add',a:7,b:1,step:4,ext:13,trim:29,shiftA:9,k:1,anim:1,playKind:null};}
+function makeScene({interactive=false,state=baseState()}={}){
+ const st={...baseState(),...state},s=[];
+ const rect=(x,y,w,h,fill=C.white,stroke=null,r=0,lw=1,extra={})=>s.push({kind:'rect',x,y,w,h,fill,stroke,r,lw,...extra});
+ const line=(x1,y1,x2,y2,color=C.line,lw=1,extra={})=>s.push({kind:'line',x1,y1,x2,y2,color,lw,...extra});
+ const text=(t,x,y,w,fs=22,color=C.ink,o={})=>s.push({kind:'text',s:t,x,y,w,h:fs*1.48,fs,color,font:FONT,...o});
+ const rich=(runs,x,y,w,fs=22,color=C.ink,o={})=>s.push({kind:'text',s:runs.map(r=>r.text).join(''),runs,x,y,w,h:fs*1.48,fs,color,font:FONT,...o});
+ const dot=(x,y,r,fill,stroke=null,lw=1,extra={})=>s.push({kind:'circle',x,y,r,fill,stroke,lw,...extra});
+ const arrow=(x1,y1,x2,y2,color=C.muted,width=1.8)=>{line(x1,y1,x2,y2,color,width);let a=Math.atan2(y2-y1,x2-x1),l=8;line(x2,y2,x2-l*Math.cos(a-.5),y2-l*Math.sin(a-.5),color,width);line(x2,y2,x2-l*Math.cos(a+.5),y2-l*Math.sin(a+.5),color,width);};
+ const pill=(label,x,y,w,h=35,bg=C.expBg,fg=C.exp,fs=18,action=null)=>{rect(x,y,w,h,bg,null,8,1,{action});text(label,x+9,y+(h-fs*1.25)/2,w-18,fs,fg,{align:'center',action});};
+ function bitrow(value,x,y,{w=4,cell=45,gap=8,fs=28,color=C.ink,bg='F3F5F9',action=null,visible=4,highlight=-1,alpha=1,firstColor=null,firstBg=null}={}){
+  const b=bits(value,w);for(let i=0;i<w;i++){
+   const act=action?`${action}:${w-1-i}`:null,isShow=i>=w-visible,fill=i===highlight?C.signBg:(i===0&&firstBg?firstBg:bg),col=i===0&&firstColor?firstColor:color;
+   rect(x+i*(cell+gap),y,cell,44,fill,i===highlight?C.sign:null,7,1,{action:act,opacity:alpha});
+   text(isShow?b[i]:'·',x+i*(cell+gap),y+3,cell,fs,col,{align:'center',font:MONO,action:act,opacity:alpha});
+  }
+ }
+ rect(0,0,1440,810,C.paper);
+//  text('ICS @ PKU · 信息的表示',64,24,650,16,C.muted,{tracking:1});
+//  text('INTEGER OPERATIONS',1050,24,326,16,C.muted,{align:'right'});
+text('整型运算',62,59,1060,43,C.ink,{bold:true});
+ text('先看位行为，再看数值',64,122,960,24,C.muted);
+//  pill('4 位教学模型 · 不等同于 C 求值',1030,76,346,41,'EEF2F8',C.ink,18);
+ rect(56,176,1328,286,C.white,C.line,18);
+ if(['add','sub','mul'].includes(st.mode)){
+  const r=arithmetic(st.a,st.b,st.mode),op=st.mode==='add'?'+':st.mode==='sub'?'−':'×',active=st.mode==='add'&&st.step<4;
+  text('加／减／乘：精确计算，再丢弃溢出位，保留低位',82,194,955,24,C.ink,{bold:true});
+//   pill('同一位行为 · 模 2ʷ',1110,192,248,41,C.expBg,C.exp,20);
+  const bx=268,by=252,cell=45,gap=8;
+//   if(interactive)text('点 0 / 1 改输入',92,236,166,15,C.muted);
+  text('x',100,260,92,25,C.muted,{font:MONO});
+  text(op+' y',100,311,128,25,C.muted,{font:MONO});
+  let ah=active?3-st.step:-1;
+  bitrow(st.a,bx,by,{action:interactive?'a':null,highlight:ah});
+  bitrow(st.b,bx,by+51,{action:interactive?'b':null,highlight:ah});
+  line(190,356,492,356,C.muted,1.5);
+  text('结果',96,370,100,22,C.muted);
+  bitrow(r.r,bx,366,{bg:C.expBg,color:C.exp,visible:active?st.step:4,firstColor:r.so?C.sign:C.exp});
+  line(252,359,252,414,C.line,1.2,{dash:'dash'});
+  if(st.mode==='add'){
+   rect(199,366,43,44,r.carry?C.signBg:'F5F6F9',null,7);
+   text(active?'·':String(r.carry),199,369,43,28,r.carry?C.sign:C.muted,{align:'center',font:MONO});
+   text('丢弃',197,413,48,15,C.muted,{align:'center'});
+   if(active){
+    for(let i=1;i<=st.step;i++){const x=bx+(3-i)*53+22.5;if(i<4)text(String(r.carries[i]),x-12,228,24,15,C.sign,{align:'center',font:MONO});}
+    text(`已算低 ${st.step} 位`,280,413,220,15,C.exp,{align:'center'});
+   }else text('保留低 4 位',268,413,205,16,C.exp,{align:'center'});
+  }else if(st.mode==='mul'){
+   text(bits(Math.floor(r.u/16)),162,377,82,20,Math.floor(r.u/16)?C.sign:C.muted,{font:MONO,align:'center'});
+   text('高 4 位丢弃',153,413,104,14,C.muted,{align:'center'});
+   text('保留低 4 位',268,413,205,16,C.exp,{align:'center'});
+  }else{
+   text('mod',190,375,60,18,C.muted,{font:MONO,align:'center'});
+   text('16',190,399,60,15,C.muted,{font:MONO,align:'center'});
+   text('保留低 4 位',268,413,205,16,C.exp,{align:'center'});
+  }
+  line(535,247,535,417,C.line,1);
+  const boxes=[{x:568,w:378,label:'无符号解读',left:st.a,right:st.b,res:r.r,wrap:r.uw,bg:r.uw?C.signBg:C.fracBg,col:r.uw?C.sign:C.frac,detail:st.mode==='add'?`最高位进位 = ${r.carry}`:st.mode==='sub'?`数学差 = ${fmt(r.u)}`:`数学积 = ${r.u}`,hint:'范围 [0, 15]'},
+   {x:964,w:394,label:'补码解读',left:signed(st.a),right:signed(st.b),res:r.sr,wrap:r.so,bg:r.so?C.signBg:C.fracBg,col:r.so?C.sign:C.frac,detail:st.mode==='add'?(r.so?'同号相加，结果异号':'未出现「同号进，异号出」'):`数学${st.mode==='sub'?'差':'积'} = ${fmt(r.s)}`,hint:'范围 [−8, 7]'}];
+  boxes.forEach((q,i)=>{
+   rect(q.x,247,q.w,165,q.bg,null,12);
+   text(q.label,q.x+20,259,q.w-40,20,q.col,{bold:true});
+   const eq=`${fmt(q.left)} ${op} ${fmt(q.right)} ${q.wrap?'→':'='} ${fmt(q.res)}`;
+   text(active?'先预测结果…':eq,q.x+20,291,q.w-40,30,active?C.muted:q.col,{font:active?FONT:MONO});
+   text(active?'等待逐位计算':q.detail,q.x+20,337,q.w-40,19,q.col);
+   text(active?'':(i===0?(q.wrap?'发生回绕':'没有回绕'):(q.wrap?'发生有符号溢出':'没有有符号溢出'))+' · '+q.hint,q.x+20,375,q.w-40,16,q.col);
+  });
+  let lesson=st.mode==='add'?'进位 ≠ 有符号溢出；补码加法溢出看「同号进，异号出」。':st.mode==='sub'?'减法：加上模逆元。x − y ≡ x + (~y + 1)  (mod 2ʷ)。':'无符号／补码的完整乘积可不同，但截断后的位模式相同。';
+  text(lesson,568,424,790,19,C.muted);
+ }else if(st.mode==='width'){
+  const v=st.ext,sg=signed(v),trim=st.trim;
+  text('扩展先看类型；截断只留下低位',82,194,970,24,C.ink,{bold:true});
+  pill('4 → 8 → 4 位',1120,192,238,41,C.expBg,C.exp,20);
+  text('点位模式试一试',88,243,200,17,C.muted);
+  bitrow(v,88,281,{action:'ext',cell:42,gap:7,fs:26});
+  text(`${v} / ${fmt(sg)}`,88,338,210,21,C.muted,{font:MONO,align:'center'});
+  arrow(303,303,356,303);
+  const slideIn=st.playKind==='extend'?st.anim:1;
+  for(const [y,prefix,num,name] of [[255,'0000',v,'零扩展'],[344,v>=8?'1111':'0000',sg,'符号扩展']]){
+   text(name,382,y-25,140,19,C.muted);
+   for(let i=0;i<8;i++){
+    const X=382+i*38+(i>=4?8:0),fill=i<4?C.fracBg:C.expBg,col=i<4?C.frac:C.exp;
+    rect(X,y,33,41,fill,null,5,1,{opacity:i<4?slideIn:1});
+    text((prefix+bits(v))[i],X,y+2,33,25,col,{font:MONO,align:'center',opacity:i<4?slideIn:1});
+   }
+   text('= '+fmt(num),725,y+4,106,27,C.frac,{font:MONO});
+  }
+  line(846,246,846,420,C.line,1);
+  text('截断：8 → 4 位',872,250,460,23,C.ink,{bold:true});
+  text('点击 8 位输入，观察低 4 位',872,282,470,17,C.muted);
+  for(let i=0;i<8;i++){
+   const X=874+i*39+(i>=4?10:0),fade=st.playKind==='trim'&&i<4?1-st.anim*.78:1;
+   rect(X,313,34,43,i<4?C.signBg:C.expBg,null,5,1,{action:`trim:${7-i}`,opacity:fade});
+   text(bits(trim,8)[i],X,316,34,25,i<4?C.sign:C.exp,{font:MONO,align:'center',action:`trim:${7-i}`,opacity:fade});
+  }
+  text(`${trim} → ${mod(trim)} / ${fmt(signed(trim))}`,874,369,450,25,C.ink,{font:MONO});
+  text('同一低位结果：无符号 / 补码解读',874,407,470,17,C.muted);
+  text('扩展保值；截断未必保值。符号扩展复制的是原最高位。',88,424,740,18,C.muted);
+ }else if(st.mode==='shift'){
+  const q=shifting(st.shiftA,st.k),P=q.p;
+  text('右移与除法：负数的舍入方向不同',82,194,955,24,C.ink,{bold:true});
+  pill(`算术右移 · k = ${st.k}`,1120,192,238,41,C.expBg,C.exp,20);
+  text('点击 4 位输入',89,241,223,17,C.muted);
+  bitrow(q.a,90,279,{action:'shiftA',cell:42,gap:7,firstColor:C.sign,firstBg:C.signBg});
+  text(`${fmt(q.s)}（补码）`,85,334,225,21,C.ink,{align:'center'});
+  arrow(304,300,359,300);
+  const rr=bits(q.ar),source=bits(q.a),pr=st.playKind==='shift'?st.anim:1;
+  for(let i=0;i<4;i++){
+   const target=382+i*49,isFill=i<st.k;
+   rect(target,279,42,44,isFill?C.signBg:C.expBg,null,7);
+   if(isFill){text(rr[i],target,282,42,27,C.sign,{font:MONO,align:'center',opacity:pr});}
+   else{
+    const start=382+(i-st.k)*49,x=start+(target-start)*pr;
+    text(rr[i],x,282,42,27,C.exp,{font:MONO,align:'center'});
+   }
+  }
+  text(`${fmt(q.ar)}（向下取整）`,369,334,268,21,C.exp,{align:'center'});
+  text('左补符号位，丢弃低位',90,388,520,19,C.muted,{align:'center'});
+  const xx=681;
+  rect(xx,246,675,176,C.expBg,null,12);
+  text('整数 /：向零',xx+22,256,300,20,C.frac,{bold:true});
+  text('算术 >>：向下',xx+350,256,290,20,C.sign,{bold:true});
+  text(`${fmt(q.s)} / ${P} = ${fmt(q.q)}`,xx+22,290,305,28,C.frac,{font:MONO});
+  text(`${fmt(q.s)} >> ${q.k} = ${fmt(q.ar)}`,xx+350,290,290,28,C.sign,{font:MONO});
+  text(`负数补偏置 2ᵏ − 1；本例加 ${q.bias}`,xx+22,346,620,21,C.ink);
+  text(`(${fmt(q.s)} + ${q.bias}) >> ${q.k} = ${fmt(q.corrected)}`,xx+22,382,620,24,C.exp,{font:MONO});
+  text(`同一输入按无符号解释：${q.a} 逻辑右移 ${q.k} 位 = ${q.lr}；向下与向零一致。`,88,428,1250,19,C.muted);
+ }
+ // Lower-left: source p.21, deliberately retains both zero/sign extension and truncation.
+ rect(56,482,608,242,C.white,C.line,18);
+ text('扩展保值；截断未必保值',82,497,550,24,C.ink,{bold:true,action:interactive?'mode:width':null});
+ const v=interactive?st.ext:13,sv=signed(v),prefix=v>=8?'1111':'0000';
+ text('零扩展',82,545,112,20,C.muted);
+ rich([{text:bits(v)+' → ',color:C.ink},{text:'0000',color:C.frac},{text:bits(v),color:C.exp}],198,543,308,25,C.ink,{font:MONO});
+ text(`${v} → ${v}`,513,546,123,19,C.frac,{align:'right'});
+ text('符号扩展',82,586,112,20,C.muted);
+ rich([{text:bits(v)+' → ',color:C.ink},{text:prefix,color:C.frac},{text:bits(v),color:C.exp}],198,584,308,25,C.ink,{font:MONO});
+ text(`${fmt(sv)} → ${fmt(sv)}`,513,587,123,19,C.frac,{align:'right'});
+ line(82,628,638,628,C.line,1);
+ text('截断',82,644,110,20,C.muted);
+ const tr=interactive?st.trim:29;
+ rich([{text:bits(tr,8).slice(0,4),color:C.sign},{text:bits(tr,4),color:C.exp},{text:' → ',color:C.muted},{text:bits(tr,4),color:C.exp}],198,640,340,25,C.ink,{font:MONO});
+ text(`${tr} → 无符号 ${mod(tr)} / 补码 ${fmt(signed(tr))}`,198,683,432,18,C.muted);
+ // Lower-right: source p.23. The negative-shift assumption is explicit.
+ rect(684,482,700,242,C.white,C.line,18);
+ text('移位：乘法看截断，除法看舍入',710,497,645,24,C.ink,{bold:true,action:interactive?'mode:shift':null});
+ text('左移 k 位：× 2ᵏ 后截断；逻辑右移：÷ 2ᵏ 取整。',710,539,650,20,C.muted);
+ rect(710,578,648,81,'F3F5FA',null,9);
+ text('整数除法 · 向零舍入',726,584,290,17,C.frac);
+ text('算术右移 · 向下舍入',1050,584,290,17,C.sign);
+ const qs=shifting(interactive?st.shiftA:9,interactive?st.k:1);
+ text(`${fmt(qs.s)} / ${qs.p} = ${fmt(qs.q)}`,726,610,300,27,C.frac,{font:MONO});
+ text(`${fmt(qs.s)} >> ${qs.k} = ${fmt(qs.ar)}`,1050,610,296,27,C.sign,{font:MONO});
+ text('负数加偏置',710,677,148,20,C.muted);
+ text(`(${fmt(qs.s)} + ${qs.bias}) >> ${qs.k} = ${fmt(qs.corrected)}`,861,675,330,24,C.exp,{font:MONO});
+ text('偏置 = 2ᵏ − 1',1175,679,177,17,C.muted,{align:'right'});
+ // This C-language supplement intentionally separates source's word-level model from C evaluation.
+ text('C 语义补充：无符号按模回绕；有符号溢出是未定义行为',64,interactive?733:756,1240,interactive?15:18,C.muted);
+ if(!interactive)text('原课件 21–23 页',1185,757,191,15,C.muted,{align:'right'});
+ return s;
+}
+if(typeof module!=='undefined')module.exports={C,makeScene,baseState,arithmetic,shifting,mod,bits,signed};
+const $=s=>document.querySelector(s),SVGNS='http://www.w3.org/2000/svg';
+let st=baseState(),token=0,staticMode=new URLSearchParams(location.search).has('static');
+function el(tag,attrs={}){const n=document.createElementNS(SVGNS,tag);for(const [k,v] of Object.entries(attrs))if(v!==null&&v!==undefined)n.setAttribute(k,v);return n;}
+function renderSvg(scene){
+ const svg=el('svg',{viewBox:'0 0 1440 810',width:1440,height:810,role:'img','aria-label':'整型运算：位模式计算和数值解释'});
+ for(const sh of scene){
+  const meta={};if(sh.action){meta['data-action']=sh.action;meta['class']='choice';meta['tabindex']=0;meta['role']='button';meta['aria-label']=sh.kind==='text'?sh.s:('修改 '+sh.action);}
+  if(sh.opacity!==undefined)meta.opacity=sh.opacity;
+  let n;if(sh.kind==='rect')n=el('rect',{x:sh.x,y:sh.y,width:sh.w,height:sh.h,rx:sh.r||0,fill:sh.fill?'#'+sh.fill:'none',stroke:sh.stroke?'#'+sh.stroke:'none','stroke-width':sh.lw||1,...meta});
+  else if(sh.kind==='circle')n=el('circle',{cx:sh.x,cy:sh.y,r:sh.r,fill:'#'+sh.fill,stroke:sh.stroke?'#'+sh.stroke:'none','stroke-width':sh.lw,...meta});
+  else if(sh.kind==='line')n=el('line',{x1:sh.x1,y1:sh.y1,x2:sh.x2,y2:sh.y2,stroke:'#'+sh.color,'stroke-width':sh.lw,'stroke-dasharray':sh.dash?'4 4':null,...meta});
+  else if(sh.kind==='text'){
+   let x=sh.x,anchor='start';if(sh.align==='center'){x+=sh.w/2;anchor='middle';}else if(sh.align==='right'){x+=sh.w;anchor='end';}
+   n=el('text',{x,y:sh.y+sh.fs*1.07,fill:'#'+sh.color,'font-size':sh.fs,'font-family':sh.font===MONO?'"DejaVu Sans Mono",Consolas,monospace':'"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif','font-weight':sh.bold?700:400,'text-anchor':anchor,'letter-spacing':sh.tracking||null,...meta});
+   if(sh.runs)for(const r of sh.runs){const t=el('tspan',{fill:'#'+(r.color||sh.color),'font-weight':r.bold?700:sh.bold?700:400});t.textContent=r.text;n.append(t);}else n.textContent=sh.s;
+  }
+  if(n)svg.append(n);
+ }
+ return svg;
+}
+function button(label,action,{active=false,primary=false,title=''}={}){const b=document.createElement('button');b.textContent=label;b.dataset.action=action;b.className=(active?'active ':'')+(primary?'primary':'');if(title)b.title=title;return b;}
+function controls(){
+ $('#nav').replaceChildren(...[['add','加法'],['sub','减法'],['mul','乘法'],].map(([mode,label])=>button(label,`mode:${mode}`,{active:mode===st.mode})));
+ const ctx=$('#context');ctx.replaceChildren();
+ if(['add','sub','mul'].includes(st.mode)){
+  const p=st.mode==='add'?[[7,1,'7 + 1'],[15,1,'15 + 1'],[8,8,'8 + 8']]:st.mode==='sub'?[[0,1,'0 − 1'],[0,8,'0 − 8'],[7,15,'7 − 15']]:[[7,3,'7 × 3'],[15,2,'15 × 2'],[8,2,'8 × 2']];
+  for(const [a,b,label]of p)ctx.append(button(label,`preset:${a}:${b}`,{active:st.a===a&&st.b===b}));
+  if(st.mode==='add'){ctx.append(button('单步','step',{title:'每次计算一个低位'}));ctx.append(button('播放进位','play',{primary:true,title:'从最低位开始，逐位计算并显示进位'}));}
+ }else if(st.mode==='width'){
+  ctx.append(button('1101','setext:13',{active:st.ext===13}),button('0101','setext:5',{active:st.ext===5}),button('播放扩展','extend',{primary:true}),button('播放截断','trim',{primary:true}));
+ }else{
+  ctx.append(button('−7','setshift:9',{active:st.shiftA===9}),button('+7','setshift:7',{active:st.shiftA===7}),button('k −','k:-1'),button('k +','k:1'),button('播放右移','shift',{primary:true}));
+ }
+ ctx.append(button('重置','reset'));
+}
+function announce(){if(['add','sub','mul'].includes(st.mode)){const r=arithmetic(st.a,st.b,st.mode);$('#live').textContent=`结果 ${bits(r.r)}；无符号 ${r.r}；补码 ${r.sr}。${r.so?'发生有符号溢出，不能视作 C 的确定结果。':''}`;}else $('#live').textContent=st.mode==='width'?'观察零扩展、符号扩展和截断。':'算术右移向下，整数除法向零。';}
+function render(){ $('#drawing').replaceChildren(renderSvg(makeScene({interactive:!staticMode,state:st})));$('#controls').style.display=staticMode?'none':'flex';if(!staticMode)controls(); }
+function stop(){token++;st.playKind=null;st.anim=1;}
+function playAdd(){stop();const id=token;st.step=0;render();for(let i=1;i<=4;i++)setTimeout(()=>{if(id!==token)return;st.step=i;render();if(i===4)announce();},i*650);}
+function animate(kind){stop();const id=token,start=performance.now(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;st.playKind=kind;st.anim=0;
+ function tick(t){if(id!==token)return;const p=reduced?1:Math.min(1,(t-start)/950);st.anim=1-(1-p)**3;render();if(p<1)requestAnimationFrame(tick);else announce();}requestAnimationFrame(tick);
+}
+function action(str){const [act,val,val2]=str.split(':');
+ if(act==='play')return playAdd();if(['extend','trim','shift'].includes(act)&&val===undefined)return animate(act);
+ stop();
+ if(act==='mode'){st.mode=val;st.step=4;}else if(['a','b','ext','trim','shiftA'].includes(act)){st[act]^=2**Number(val);st.step=4;}
+ else if(act==='preset'){st.a=Number(val);st.b=Number(val2);st.step=4;}
+ else if(act==='step')st.step=st.step===4?0:st.step+1;
+ else if(act==='setext')st.ext=Number(val);
+ else if(act==='setshift')st.shiftA=Number(val);
+ else if(act==='k')st.k=Math.max(0,Math.min(3,st.k+Number(val)));
+ else if(act==='reset')st=baseState();
+ render();announce();
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-action]');if(t)action(t.dataset.action);});
+document.addEventListener('keydown',e=>{
+ if((e.code==='Enter'||e.code==='Space')&&e.target.matches('svg [data-action]')){e.preventDefault();action(e.target.dataset.action);}
+ else if(e.code==='Space'&&!['BUTTON','INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)){e.preventDefault();if(st.mode==='add')playAdd();else if(st.mode==='width')animate('extend');else if(st.mode==='shift')animate('shift');}
+});
+function resize(){const scale=Math.min(innerWidth/1440,innerHeight/810),el=$('#stage');el.style.transform=`scale(${scale})`;el.style.left=(innerWidth-1440*scale)/2+'px';el.style.top=(innerHeight-810*scale)/2+'px';}
+addEventListener('resize',resize);render();resize();
+window.integerDemo={getState:()=>({...st}),setState:patch=>{stop();st={...st,...patch};render();},arithmetic,shifting,bits,signed,makeScene,action};
+
+</script></body></html>
