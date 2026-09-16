@@ -2,7 +2,7 @@
 Slides for students in Section 2, actively updating 🔥.
 
 ## Lecture Slides
-| Week   | Topic                                  |Content|Snapshot|
+| Index   | Topic                                  |Content|Snapshot|
 |:--------:|:----------------------------------------:|:-------------------------------:|:-------:|
-| 1 | Welcome|Course Overview| |
-| 2 | Data|Bits, Bytes & Integers, Floating Points|<img src="./figs/02.png" width="600">|
+| 01 | Welcome|Course Overview| |
+| 02 | Data|Bits, Bytes & Integers, Floating Points|<img src="./figs/02.png" width="600">|
